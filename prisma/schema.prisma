@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tipo {
+  id         String       @id @default(uuid())
+  nome       String
+  Tipo       Tipo?        @relation("TipoArray", fields: [tipoId], references: [id])
+  tipoId     String?
+  ativo      Boolean      @default(true)
+  Pessoa     Pessoa[]
+  Endereco   Endereco[]
+  Permissao  Permissao[]
+  Contato    Contato[]
+  PessoaTipo PessoaTipo[]
+  Tipos      Tipo[]       @relation("TipoArray")
+}
+
+model Pessoa {
+  id                 String        @id @default(uuid())
+  nome               String
+  documento          String?
+  razaoSocial        String?
+  nomeFantasia       String?
+  inscricaoMunicipal String?
+  inscricaoEstadual  String?
+  nascimento         DateTime?
+  dataCadastro       DateTime      @default(now())
+  dataAtualizado     DateTime?
+  ativo              Boolean?      @default(true)
+  Endereco           Endereco[]
+  User               User[]
+  isAdmin            Boolean?      @default(false)
+  Permissao          Permissao[]
+  Contato            Contato[]
+  Tipo               Tipo?         @relation(fields: [tipoId], references: [id])
+  tipoId             String?
+  PessoaTipo         PessoaTipo[]
+  empresa            Pessoa?       @relation("MatrizFilial", fields: [empresaId], references: [id])
+  Empresa            Pessoa[]      @relation("MatrizFilial")
+  empresaId          String?
+  UserEmpresa        UserEmpresa[]
+}
+
+model PessoaTipo {
+  id       String @id @default(uuid())
+  tipo     Tipo   @relation(fields: [idTipo], references: [id])
+  idTipo   String
+  pessoa   Pessoa @relation(fields: [idPessoa], references: [id])
+  idPessoa String
+}
+
+model Endereco {
+  id          String   @id @default(uuid())
+  tipo        Tipo     @relation(fields: [idTipo], references: [id])
+  idTipo      String
+  pessoa      Pessoa   @relation(fields: [idPessoa], references: [id])
+  idPessoa    String
+  cep         String
+  local       String
+  numero      String
+  bairro      String
+  complemento String?
+  cidade      String
+  estado      String
+  ativo       Boolean? @default(true)
+  principal   Boolean? @default(false)
+
+  @@index([cep, local, bairro, cidade])
+}
+
+model User {
+  id             String    @id @default(uuid())
+  pessoa         Pessoa    @relation(fields: [idPessoa], references: [id])
+  idPessoa       String
+  email          String    @unique
+  password       String
+  refreshToken   String?
+  dataCadastro   DateTime  @default(now())
+  dataAtualizado DateTime?
+  ativo          Boolean?  @default(true)
+
+  @@index([email])
+}
+
+model UserEmpresa {
+  id        String  @id @default(uuid())
+  idPessoa  String
+  idEmpresa String
+  Pessoa    Pessoa? @relation(fields: [pessoaId], references: [id])
+  pessoaId  String?
+}
+
+model Permissao {
+  id        String   @id @default(uuid())
+  tipo      Tipo     @relation(fields: [idTipo], references: [id])
+  idTipo    String
+  pessoa    Pessoa   @relation(fields: [idPessoa], references: [id])
+  idPessoa  String
+  listar    Boolean? @default(false)
+  cadastrar Boolean? @default(false)
+  editar    Boolean? @default(false)
+  excluir   Boolean? @default(false)
+}
+
+model Contato {
+  id        String   @id @default(uuid())
+  tipo      Tipo     @relation(fields: [idTipo], references: [id])
+  idTipo    String
+  pessoa    Pessoa   @relation(fields: [idPessoa], references: [id])
+  idPessoa  String
+  descricao String
+  ativo     Boolean? @default(true)
+
+  @@index([descricao])
+}
